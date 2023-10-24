@@ -60,18 +60,17 @@ func (r *RoomKeysType) SetKey(channel string) (key string, err error) {
 		}
 	}
 
-	for {
+	if unconvertedKey, found := r.localCache.Get(channel); found {
+		key = unconvertedKey.(string)
+	} else {
 		key = uid.RandStringRunes(48)
-		if _, found := r.localCache.Get(key); !found {
-			r.localCache.SetDefault(channel, key)
-			r.localCache.SetDefault(key, channel)
-			break
-		}
+		r.localCache.SetDefault(channel, key)
+		r.localCache.SetDefault(key, channel)
 	}
 	return
 }
 
-func (r *RoomKeysType) GetKey(channel string) (newKey string, err error) {
+func (r *RoomKeysType) GetKey(channel string) (newKey string, found bool, err error) {
 	if !saveInLocal {
 		if newKey, err = r.redisCli.Get(channel).Result(); err == redis.Nil {
 			newKey, err = r.SetKey(channel)
@@ -83,9 +82,8 @@ func (r *RoomKeysType) GetKey(channel string) (newKey string, err error) {
 	}
 
 	var key interface{}
-	var found bool
 	if key, found = r.localCache.Get(channel); found {
-		return key.(string), nil
+		return key.(string), found, nil
 	}
 	newKey, err = r.SetKey(channel)
 	log.Debugf("[KEY] new channel [%s]: %s", channel, newKey)

@@ -3,13 +3,14 @@ package api
 import (
 	"encoding/json"
 	"fmt"
-	"net"
-	"net/http"
-
 	"github.com/gwuhaolin/livego/av"
 	"github.com/gwuhaolin/livego/configure"
 	"github.com/gwuhaolin/livego/protocol/rtmp"
 	"github.com/gwuhaolin/livego/protocol/rtmp/rtmprelay"
+	"github.com/gwuhaolin/livego/utils"
+	"net"
+	"net/http"
+	"os"
 
 	jwtmiddleware "github.com/auth0/go-jwt-middleware"
 	"github.com/dgrijalva/jwt-go"
@@ -429,12 +430,29 @@ func (s *Server) handleGet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	msg, err := configure.RoomKeys.GetKey(room)
+	msg, found, err := configure.RoomKeys.GetKey(room)
 	if err != nil {
 		msg = err.Error()
 		res.Status = 400
 	}
+
 	res.Data = msg
+
+	defer func() {
+		if !found {
+			utils.GetCacheRoomFile(func(file *os.File) {
+				stat, fileErr := file.Stat()
+				if fileErr != nil {
+					return
+				}
+				writeLen, fileErr := file.WriteAt([]byte(room+";"), stat.Size())
+				if writeLen == 0 || fileErr != nil {
+					return
+				}
+				log.Info("appended room : [" + room + "] to cache file")
+			})
+		}
+	}()
 }
 
 //http://127.0.0.1:8090/control/delete?room=ROOM_NAME

@@ -3,18 +3,18 @@ package main
 import (
 	"crypto/tls"
 	"fmt"
-	"net"
-	"path"
-	"runtime"
-	"time"
-
 	"github.com/gwuhaolin/livego/configure"
 	"github.com/gwuhaolin/livego/protocol/api"
 	"github.com/gwuhaolin/livego/protocol/hls"
 	"github.com/gwuhaolin/livego/protocol/httpflv"
 	"github.com/gwuhaolin/livego/protocol/rtmp"
-
+	"github.com/gwuhaolin/livego/utils"
 	log "github.com/sirupsen/logrus"
+	"net"
+	"os"
+	"path"
+	"runtime"
+	"strings"
 )
 
 var VERSION = "master"
@@ -142,12 +142,6 @@ func init() {
 }
 
 func main() {
-	defer func() {
-		if r := recover(); r != nil {
-			log.Error("livego panic: ", r)
-			time.Sleep(1 * time.Second)
-		}
-	}()
 
 	log.Infof(`
      _     _            ____       
@@ -157,6 +151,28 @@ func main() {
     |_____|_| \_/ \___|\____|\___/ 
         version: %s
 	`, VERSION)
+
+	utils.GetCacheRoomFile(func(file *os.File) {
+		stat, err := file.Stat()
+		if err != nil {
+			return
+		}
+		bytes := make([]byte, stat.Size())
+		readLen, err := file.Read(bytes)
+		if readLen == 0 || err != nil {
+			return
+		}
+		rooms := strings.Split(string(bytes), ";")
+		for _, room := range rooms {
+			if len(room) == 0 {
+				continue
+			}
+			_, err = configure.RoomKeys.SetKey(room)
+			if err == nil {
+				log.Info("get latest cache room : [", room, "] from cache file")
+			}
+		}
+	})
 
 	apps := configure.Applications{}
 	configure.Config.UnmarshalKey("server", &apps)
@@ -175,4 +191,11 @@ func main() {
 
 		startRtmp(stream, hlsServer)
 	}
+
+	defer func() {
+		if r := recover(); r != nil {
+			log.Error("livego panic: ", r)
+			//time.Sleep(1 * time.Second)
+		}
+	}()
 }
