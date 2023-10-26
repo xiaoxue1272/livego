@@ -25,7 +25,11 @@ type Response struct {
 
 func (r *Response) SendJson() (int, error) {
 	resp, _ := json.Marshal(r)
-	r.w.Header().Set("Content-Type", "application/json")
+	header := r.w.Header()
+	header.Set("Content-Type", "application/json")
+	header.Set("Access-Control-Allow-Origin", "*")
+	header.Set("Access-Control-Allow-Methods", "*")
+	header.Set("Access-Control-Max-Age", "1728000")
 	r.w.WriteHeader(r.Status)
 	return r.w.Write(resp)
 }
