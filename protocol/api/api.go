@@ -105,7 +105,7 @@ func JWTMiddleware(next http.Handler) http.Handler {
 	})
 }
 
-func (s *Server) Serve(l net.Listener) error {
+func (s *Server) Serve(listener net.Listener) error {
 	mux := http.NewServeMux()
 
 	mux.Handle("/statics/", http.StripPrefix("/statics/", http.FileServer(http.Dir("statics"))))
@@ -128,7 +128,17 @@ func (s *Server) Serve(l net.Listener) error {
 	mux.HandleFunc("/stat/livestat", func(w http.ResponseWriter, r *http.Request) {
 		s.GetLiveStatics(w, r)
 	})
-	http.Serve(l, JWTMiddleware(mux))
+	var err error
+	if configure.Config.GetBool("use_https") {
+		certPath := configure.Config.GetString("ssl_cert_file")
+		keyPath := configure.Config.GetString("ssl_key_file")
+		err = http.ServeTLS(listener, mux, certPath, keyPath)
+	} else {
+		err = http.Serve(listener, mux)
+	}
+	if err != nil {
+		return err
+	}
 	return nil
 }
 

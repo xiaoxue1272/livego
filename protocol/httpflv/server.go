@@ -2,6 +2,7 @@ package httpflv
 
 import (
 	"encoding/json"
+	"github.com/gwuhaolin/livego/configure"
 	"net"
 	"net/http"
 	"strings"
@@ -32,7 +33,7 @@ func NewServer(h av.Handler) *Server {
 	}
 }
 
-func (server *Server) Serve(l net.Listener) error {
+func (server *Server) Serve(listener net.Listener) error {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		server.handleConn(w, r)
@@ -40,7 +41,15 @@ func (server *Server) Serve(l net.Listener) error {
 	mux.HandleFunc("/streams", func(w http.ResponseWriter, r *http.Request) {
 		server.getStream(w, r)
 	})
-	if err := http.Serve(l, mux); err != nil {
+	var err error
+	if configure.Config.GetBool("use_https") {
+		certPath := configure.Config.GetString("ssl_cert_file")
+		keyPath := configure.Config.GetString("ssl_key_file")
+		err = http.ServeTLS(listener, mux, certPath, keyPath)
+	} else {
+		err = http.Serve(listener, mux)
+	}
+	if err != nil {
 		return err
 	}
 	return nil

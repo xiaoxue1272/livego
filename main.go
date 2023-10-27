@@ -41,12 +41,12 @@ func startHls() *hls.Server {
 
 func startRtmp(stream *rtmp.RtmpStream, hlsServer *hls.Server) {
 	rtmpAddr := configure.Config.GetString("rtmp_addr")
-	isRtmps := configure.Config.GetBool("enable_rtmps")
+	isRtmps := configure.Config.GetBool("use_rtmps")
 
 	var rtmpListen net.Listener
 	if isRtmps {
-		certPath := configure.Config.GetString("rtmps_cert")
-		keyPath := configure.Config.GetString("rtmps_key")
+		certPath := configure.Config.GetString("ssl_cert_file")
+		keyPath := configure.Config.GetString("ssl_key_file")
 		cert, err := tls.LoadX509KeyPair(certPath, keyPath)
 		if err != nil {
 			log.Fatal(err)

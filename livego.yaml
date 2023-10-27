@@ -1,5 +1,5 @@
-# # Logger level
-# level: info
+ # Logger level
+ level: info
 
 # # FLV Options
 # flv_archive: false
@@ -9,15 +9,15 @@
 # # RTMP Options
 # rtmp_noauth: false
 # rtmp_addr: ":1935"
-# enable_rtmps: true
-# rtmps_cert: server.crt
-# rtmps_key: server.key
+# use_rtmps: true
+# ssl_cert_file: server.crt
+# ssl_key_file: server.key
 # read_timeout: 10
 # write_timeout: 10
 
 # # HLS Options
 # hls_addr: ":7002"
-#use_hls_https: true
+# use_https: true
 
 # # API Options
 # api_addr: ":8090"

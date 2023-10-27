@@ -119,9 +119,10 @@ func initDefault() {
 
 	// Flags
 	pflag.String("rtmp_addr", ":1935", "RTMP server listen address")
-	pflag.Bool("enable_rtmps", false, "enable server session RTMPS")
-	pflag.String("rtmps_cert", "server.crt", "cert file path required for RTMPS")
-	pflag.String("rtmps_key", "server.key", "key file path required for RTMPS")
+	pflag.Bool("use_rtmps", false, "enable server session RTMPS")
+	pflag.Bool("use_https", false, "enable HTTPS")
+	pflag.String("ssl_cert_file", "server.crt", "cert file path required for RTMPS")
+	pflag.String("ssl_key_file", "server.key", "key file path required for RTMPS")
 	pflag.String("httpflv_addr", ":7001", "HTTP-FLV server listen address")
 	pflag.String("hls_addr", ":7002", "HLS server listen address")
 	pflag.String("api_addr", ":8090", "HTTP manage interface server listen address")

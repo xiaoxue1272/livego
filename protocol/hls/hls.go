@@ -54,10 +54,16 @@ func (server *Server) Serve(listener net.Listener) error {
 	})
 	server.listener = listener
 
-	if configure.Config.GetBool("use_hls_https") {
-		http.ServeTLS(listener, mux, "server.crt", "server.key")
+	var err error
+	if configure.Config.GetBool("use_https") {
+		certPath := configure.Config.GetString("ssl_cert_file")
+		keyPath := configure.Config.GetString("ssl_key_file")
+		err = http.ServeTLS(listener, mux, certPath, keyPath)
 	} else {
-		http.Serve(listener, mux)
+		err = http.Serve(listener, mux)
+	}
+	if err != nil {
+		return err
 	}
 
 	return nil
